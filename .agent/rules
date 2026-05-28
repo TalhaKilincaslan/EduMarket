@@ -1,0 +1,15 @@
+# EduMarket Agent Rules
+
+## Technology Stack
+- **Backend:** Python (FastAPI)
+- **Frontend:** React / Next.js
+- **Database:** PostgreSQL
+- **Cache:** Redis
+
+## Architecture
+- **Microservices:** The application should be built using a microservices architecture.
+- **Docker:** Every service MUST have its own `Dockerfile` to enable containerized deployments.
+
+## Code Standards
+- **Clean Code:** Adhere strictly to Clean Code principles. Keep functions small, modular, and single-purpose. Give variables and functions descriptive and meaningful names.
+- **Documentation:** All code, especially API endpoints, business logic, and complex functions, must be thoroughly documented with docstrings and explanatory comments where necessary.
