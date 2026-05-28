@@ -452,6 +452,9 @@ class NotificationOut(BaseModel):
 class ForgotPasswordRequest(BaseModel):
     email: str
 
+class ResendVerificationRequest(BaseModel):
+    email: str
+
 class ResetPasswordRequest(BaseModel):
     token: str
     new_password: str
@@ -699,6 +702,41 @@ def verify_email(token: str = Query(...), db: Session = Depends(get_db)):
     user.verification_token = None
     db.commit()
     return {"message": "E-posta başarıyla doğrulandı!"}
+
+@app.post("/auth/resend-verification")
+def resend_verification(req: ResendVerificationRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
+    email_lower = req.email.lower().strip()
+    user = db.query(UserModel).filter(UserModel.email == email_lower).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
+    if user.is_verified:
+        raise HTTPException(status_code=400, detail="Bu hesap zaten onaylanmış")
+        
+    token = str(uuid.uuid4())
+    user.verification_token = token
+    db.commit()
+    
+    subject = "EduMarket - Yeni E-posta Adresi Doğrulama"
+    verification_link = f"{FRONTEND_URL}/eposta-dogrula?token={token}"
+    html_content = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2 style="color: #3b82f6;">Yeni E-posta Adresi Doğrulama Talebi</h2>
+            <p>Merhaba {user.full_name},</p>
+            <p>EduMarket hesabınız için yeni bir aktivasyon bağlantısı talep ettiniz. Hesabınızı aktifleştirmek için lütfen aşağıdaki bağlantıya tıklayın:</p>
+            <p style="margin: 30px 0;">
+                <a href="{verification_link}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">E-postamı Doğrula</a>
+            </p>
+            <p>Bağlantı çalışmıyorsa, bu adresi tarayıcınıza kopyalayabilirsiniz:</p>
+            <p><a href="{verification_link}">{verification_link}</a></p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+            <p style="font-size: 12px; color: #777;">Bu e-posta EduMarket şifre/aktivasyon talebiniz üzerine gönderilmiştir.</p>
+        </body>
+    </html>
+    """
+    background_tasks.add_task(send_email_task, subject, user.email, html_content)
+    
+    return {"message": "Yeni doğrulama linki e-posta adresinize gönderildi!"}
 
 async def create_notification(db: Session, user_id: int, title: str, content: str, type: str):
     new_notif = NotificationModel(

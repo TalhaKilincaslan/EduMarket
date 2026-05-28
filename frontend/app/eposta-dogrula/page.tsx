@@ -14,6 +14,38 @@ function EpostaDogrulaContent() {
   const [errorMessage, setErrorMessage] = useState('');
   const [countdown, setCountdown] = useState(3);
 
+  const [showResendForm, setShowResendForm] = useState(false);
+  const [resendEmail, setResendEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState('');
+  const [resendError, setResendError] = useState('');
+
+  const handleResend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResendLoading(true);
+    setResendMessage('');
+    setResendError('');
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API_URL}/auth/resend-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resendEmail })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResendMessage(data.message || 'Yeni doğrulama linki e-posta adresinize gönderildi!');
+        setResendEmail('');
+      } else {
+        setResendError(data.detail || 'İşlem başarısız oldu.');
+      }
+    } catch (err) {
+      setResendError('Sunucuya bağlanılamadı.');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!token) {
       setStatus('error');
@@ -109,6 +141,45 @@ function EpostaDogrulaContent() {
               Ana Sayfaya Dön
             </Link>
           </div>
+
+          {resendMessage && (
+            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm max-w-sm mx-auto">
+              {resendMessage}
+            </div>
+          )}
+          {resendError && (
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm max-w-sm mx-auto">
+              {resendError}
+            </div>
+          )}
+
+          {showResendForm ? (
+            <form onSubmit={handleResend} className="space-y-4 pt-4 border-t border-white/5 max-w-sm mx-auto text-left">
+              <label className="text-xs font-semibold text-textMuted uppercase tracking-wider block">Kayıtlı E-posta Adresi</label>
+              <input
+                type="email"
+                required
+                placeholder="ornek@edu.tr"
+                value={resendEmail}
+                onChange={(e) => setResendEmail(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl glass-input text-white focus:outline-none focus:border-primary placeholder:text-textMuted/50 text-sm"
+              />
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setShowResendForm(false)} className="flex-1 bg-white/5 hover:bg-white/10 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+                  Vazgeç
+                </button>
+                <button type="submit" disabled={resendLoading} className="flex-1 bg-primary hover:bg-blue-600 text-white py-2.5 rounded-xl text-sm font-medium transition-colors">
+                  {resendLoading ? 'Gönderiliyor...' : 'Gönder'}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <div className="pt-4 border-t border-white/5">
+              <button onClick={() => setShowResendForm(true)} className="text-sm text-primary hover:text-blue-400 font-medium transition-colors">
+                Doğrulama Kodunu Tekrar Gönder
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

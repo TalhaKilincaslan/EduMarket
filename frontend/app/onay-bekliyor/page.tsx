@@ -3,7 +3,7 @@
 import React, { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { Mail, ArrowRight, Server } from 'lucide-react';
+import { Mail, ArrowRight } from 'lucide-react';
 
 function OnayBekliyorContent() {
   const searchParams = useSearchParams();
@@ -30,15 +30,6 @@ function OnayBekliyorContent() {
         <span className="text-white font-medium text-lg break-all">{email}</span>
       </div>
 
-      <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 mb-8 text-left flex gap-3 text-amber-400">
-        <Server className="w-6 h-6 flex-shrink-0 mt-0.5" />
-        <div>
-          <h4 className="font-bold text-sm mb-1">Geliştirici Notu (Terminal Simülasyonu)</h4>
-          <p className="text-xs leading-relaxed opacity-90">
-            Gerçek bir SMTP e-posta sunucusu kurmak yerine doğrulama bağlantısı **backend terminal loglarına** yazdırılmıştır. Hesabınızı onaylamak için terminaldeki aktivasyon bağlantısına tıklayın veya kopyalayın.
-          </p>
-        </div>
-      </div>
 
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Link href="/login" className="bg-primary hover:bg-blue-600 text-white px-8 py-3.5 rounded-xl font-medium transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">

@@ -17,6 +17,38 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const [showResendModal, setShowResendModal] = useState(false);
+  const [resendEmail, setResendEmail] = useState('');
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState('');
+  const [resendError, setResendError] = useState('');
+
+  const handleResendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResendLoading(true);
+    setResendSuccess('');
+    setResendError('');
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API_URL}/auth/resend-verification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: resendEmail })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setResendSuccess(data.message || 'Yeni doğrulama linki e-posta adresinize gönderildi!');
+        setResendEmail('');
+      } else {
+        setResendError(data.detail || 'İşlem başarısız oldu.');
+      }
+    } catch (err) {
+      setResendError('Sunucuya bağlanılamadı.');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -134,13 +166,83 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="mt-8 text-center text-textMuted text-sm relative z-10">
-          Hesabınız yok mu?{' '}
-          <Link href="/register" className="text-primary hover:text-blue-400 font-medium transition-colors">
-            Kayıt Olun
-          </Link>
-        </p>
+        <div className="mt-8 text-center text-textMuted text-sm relative z-10 flex flex-col gap-2">
+          <p>
+            Hesabınız yok mu?{' '}
+            <Link href="/register" className="text-primary hover:text-blue-400 font-medium transition-colors">
+              Kayıt Olun
+            </Link>
+          </p>
+          <p>
+            Doğrulama e-postası almadınız mı?{' '}
+            <button
+              onClick={() => setShowResendModal(true)}
+              className="text-primary hover:text-blue-400 font-medium transition-colors cursor-pointer"
+            >
+              Tekrar Gönder
+            </button>
+          </p>
+        </div>
       </div>
+
+      {showResendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="glass w-full max-w-md rounded-3xl p-8 border border-white/10 text-left relative">
+            <h2 className="text-2xl font-bold text-white mb-2">Onay E-postasını Tekrar Gönder</h2>
+            <p className="text-textMuted text-sm mb-6">Hesabınızı doğrulamak için kayıtlı e-posta adresinizi girin.</p>
+            
+            {resendSuccess && (
+              <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm">
+                {resendSuccess}
+              </div>
+            )}
+            {resendError && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+                {resendError}
+              </div>
+            )}
+
+            <form onSubmit={handleResendEmail} className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-textMain/80 flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-primary" /> E-posta Adresi
+                </label>
+                <input
+                  type="email"
+                  required
+                  placeholder="ornek@edu.tr"
+                  value={resendEmail}
+                  onChange={(e) => setResendEmail(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl glass-input text-white focus:outline-none focus:border-primary placeholder:text-textMuted/50"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowResendModal(false);
+                    setResendSuccess('');
+                    setResendError('');
+                    setResendEmail('');
+                  }}
+                  className="px-6 py-2.5 rounded-xl font-medium bg-white/5 hover:bg-white/10 text-white transition-colors"
+                >
+                  Kapat
+                </button>
+                <button
+                  type="submit"
+                  disabled={resendLoading}
+                  className="px-6 py-2.5 rounded-xl font-medium bg-primary hover:bg-blue-600 text-white transition-colors flex items-center gap-2 shadow-lg shadow-primary/25 disabled:opacity-75"
+                >
+                  {resendLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Gönder
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

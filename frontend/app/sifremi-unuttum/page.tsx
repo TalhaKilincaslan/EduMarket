@@ -82,9 +82,6 @@ export default function ForgotPasswordPage() {
             <p className="text-textMuted text-sm">
               <strong className="text-white">{email}</strong> adresine şifre sıfırlama bağlantısı gönderildi. Lütfen e-posta kutunuzu (ve gerekiyorsa spam klasörünüzü) kontrol edin.
             </p>
-            <p className="text-xs text-primary bg-primary/10 p-3 rounded-lg border border-primary/20 mt-4">
-              <strong>Geliştirici Notu:</strong> Gerçek bir e-posta sunucusu olmadığı için sıfırlama linki arka plan (backend) loglarına yazdırılmıştır. Terminali kontrol edin.
-            </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
