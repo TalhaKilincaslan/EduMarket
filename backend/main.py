@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, status, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Depends, HTTPException, File, UploadFile, status, Query, WebSocket, WebSocketDisconnect, BackgroundTasks
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -17,6 +17,9 @@ load_dotenv()
 import uuid
 import shutil
 import time
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 # 1. Klasör ve Yol Ayarları (Docker Volume ile uyumlu)
 STATIC_DIR = "/app/static"
@@ -544,13 +547,49 @@ def get_current_admin_user(current_user: UserModel = Depends(get_current_user)):
         )
     return current_user
 
+def send_email_task(subject: str, recipient: str, html_content: str):
+    mail_server = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    mail_port = int(os.getenv("MAIL_PORT", "587"))
+    mail_username = os.getenv("MAIL_USERNAME", "")
+    mail_password = os.getenv("MAIL_PASSWORD", "")
+    mail_from = os.getenv("MAIL_FROM", mail_username)
+    mail_starttls = os.getenv("MAIL_STARTTLS", "True").lower() in ("true", "1", "yes")
+    mail_ssl_tls = os.getenv("MAIL_SSL_TLS", "False").lower() in ("true", "1", "yes")
+
+    if not mail_username or not mail_password:
+        print(f"UYARI: SMTP kimlik bilgileri girilmemiş. E-posta gönderilemedi. (Kime: {recipient})")
+        return
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = mail_from
+        msg['To'] = recipient
+        msg['Subject'] = subject
+
+        msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+        if mail_ssl_tls:
+            server = smtplib.SMTP_SSL(mail_server, mail_port)
+        else:
+            server = smtplib.SMTP(mail_server, mail_port)
+            
+        if mail_starttls:
+            server.starttls()
+            
+        server.login(mail_username, mail_password)
+        server.sendmail(mail_from, recipient, msg.as_string())
+        server.quit()
+        print(f"E-posta başarıyla gönderildi: {recipient}")
+    except Exception as e:
+        print(f"HATA: E-posta gönderilemedi ({recipient}): {e}")
+
 # 8. Endpointler (API Rotaları)
 @app.get("/")
 def health_check():
     return {"status": "EduMarket Backend Live", "storage": "persistent"}
 
 @app.post("/auth/register", response_model=UserOut)
-def register(user: UserCreate, db: Session = Depends(get_db)):
+def register(user: UserCreate, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     email_lower = user.email.lower().strip()
     if not (email_lower.endswith('.edu') or email_lower.endswith('.edu.tr')):
         raise HTTPException(
@@ -578,12 +617,27 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     
-    print("\n" + "="*80)
-    print("MOCK E-POSTA DOĞRULAMA GÖNDERİMİ:")
-    print(f"Kime: {new_user.email}")
-    print(f"Konu: EduMarket E-posta Doğrulama")
-    print(f"Bağlantı: http://localhost:3000/eposta-dogrula?token={token}")
-    print("="*80 + "\n")
+    # E-posta gönderme işlemi
+    subject = "EduMarket - E-posta Adresi Doğrulama"
+    verification_link = f"http://localhost:3000/eposta-dogrula?token={token}"
+    html_content = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2 style="color: #3b82f6;">EduMarket'e Hoş Geldiniz!</h2>
+            <p>Merhaba {new_user.full_name},</p>
+            <p>EduMarket topluluğuna katıldığınız için teşekkür ederiz. Hesabınızı aktifleştirmek ve kampüs içi ticarete başlamak için lütfen aşağıdaki bağlantıya tıklayın:</p>
+            <p style="margin: 30px 0;">
+                <a href="{verification_link}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">E-postamı Doğrula</a>
+            </p>
+            <p>Bağlantı çalışmıyorsa, bu adresi tarayıcınıza kopyalayabilirsiniz:</p>
+            <p><a href="{verification_link}">{verification_link}</a></p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+            <p style="font-size: 12px; color: #777;">Bu e-posta EduMarket hesabı oluşturulduğu için otomatik olarak gönderilmiştir. Eğer kayıt işlemini siz yapmadıysanız bu mesajı güvenle görmezden gelebilirsiniz.</p>
+        </body>
+    </html>
+    """
+    
+    background_tasks.add_task(send_email_task, subject, new_user.email, html_content)
     
     return new_user
 
@@ -697,7 +751,7 @@ def read_all_notifications(db: Session = Depends(get_db), current_user: UserMode
     return {"message": "Tüm bildirimler okundu olarak işaretlendi."}
 
 @app.post("/auth/forgot-password")
-def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(req: ForgotPasswordRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     print(f"E-posta sıfırlama isteği alındı: {req.email}")
     user = db.query(UserModel).filter(UserModel.email == req.email).first()
     if not user:
@@ -708,7 +762,29 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     user.reset_token_expires = datetime.utcnow().timestamp() + 3600 # 1 hour
     db.commit()
     
-    print(f"Sıfırlama linki: http://localhost:3000/sifre-sifirla?token={token}")
+    # E-posta gönderme işlemi
+    subject = "EduMarket - Şifre Sıfırlama Talebi"
+    reset_link = f"http://localhost:3000/sifre-sifirla?token={token}"
+    html_content = f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2 style="color: #3b82f6;">Şifre Sıfırlama Talebi</h2>
+            <p>Merhaba {user.full_name},</p>
+            <p>EduMarket hesabınız için şifre sıfırlama talebinde bulundunuz. Şifrenizi sıfırlamak için lütfen aşağıdaki bağlantıya tıklayın:</p>
+            <p style="margin: 30px 0;">
+                <a href="{reset_link}" style="background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">Şifremi Sıfırla</a>
+            </p>
+            <p>Bu bağlantı 1 saat boyunca geçerlidir. Eğer şifre sıfırlama talebinde bulunmadıysanız bu e-postayı dikkate almayabilirsiniz. Hesabınız güvendedir.</p>
+            <p>Bağlantı çalışmıyorsa, bu adresi tarayıcınıza kopyalayabilirsiniz:</p>
+            <p><a href="{reset_link}">{reset_link}</a></p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+            <p style="font-size: 12px; color: #777;">Bu e-posta EduMarket şifre sıfırlama talebiniz üzerine gönderilmiştir.</p>
+        </body>
+    </html>
+    """
+    
+    background_tasks.add_task(send_email_task, subject, user.email, html_content)
+    
     return {"message": "Eğer e-posta adresi sistemimizde kayıtlıysa, şifre sıfırlama bağlantısı gönderildi."}
 
 @app.post("/auth/reset-password")
