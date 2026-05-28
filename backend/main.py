@@ -259,6 +259,7 @@ app.add_middleware(
 
 # 6. Auth Ayarları
 SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_edumarket_key")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -619,7 +620,7 @@ def register(user: UserCreate, background_tasks: BackgroundTasks, db: Session = 
     
     # E-posta gönderme işlemi
     subject = "EduMarket - E-posta Adresi Doğrulama"
-    verification_link = f"http://localhost:3000/eposta-dogrula?token={token}"
+    verification_link = f"{FRONTEND_URL}/eposta-dogrula?token={token}"
     html_content = f"""
     <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
@@ -764,7 +765,7 @@ def forgot_password(req: ForgotPasswordRequest, background_tasks: BackgroundTask
     
     # E-posta gönderme işlemi
     subject = "EduMarket - Şifre Sıfırlama Talebi"
-    reset_link = f"http://localhost:3000/sifre-sifirla?token={token}"
+    reset_link = f"{FRONTEND_URL}/sifre-sifirla?token={token}"
     html_content = f"""
     <html>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
