@@ -36,6 +36,7 @@ function ListingsContent() {
   const router = useRouter();
   const { user, token, logout, loading: authLoading } = useAuth();
   const { hasUnreadMessages } = useChat();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   // Real-time filter states
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
@@ -60,7 +61,7 @@ function ListingsContent() {
 
   useEffect(() => {
     if (user && token) {
-      fetch('http://localhost:8000/me/favorites/ids', {
+      fetch(`${API_URL}/me/favorites/ids`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(res => res.ok ? res.json() : [])
@@ -90,7 +91,7 @@ function ListingsContent() {
       if (sortBy) params.append('sort_by', sortBy);
       if (selectedCampus) params.append('campus', selectedCampus);
 
-      const res = await fetch(`http://localhost:8000/products?${params.toString()}`);
+      const res = await fetch(`${API_URL}/products?${params.toString()}`);
       if (res.ok) {
         setProducts(await res.json());
       }
@@ -118,7 +119,7 @@ function ListingsContent() {
     }
     const isFav = favoriteIds.has(productId);
     try {
-      const res = await fetch(`http://localhost:8000/products/${productId}/favorite`, {
+      const res = await fetch(`${API_URL}/products/${productId}/favorite`, {
         method: isFav ? 'DELETE' : 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -164,7 +165,7 @@ function ListingsContent() {
               <Link href="/profil" className="flex items-center gap-2 group hidden sm:flex bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-full border border-white/10 transition-colors">
                 <div className="w-8 h-8 rounded-full bg-primary/20 overflow-hidden flex items-center justify-center">
                   {user.profile_image_url ? (
-                    <img src={`http://localhost:8000${user.profile_image_url}`} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={`${API_URL}${user.profile_image_url}`} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-4 h-4 text-primary" />
                   )}
@@ -354,7 +355,7 @@ function ListingsContent() {
                     {product.image_url ? (
                       <>
                         <img
-                          src={`http://localhost:8000${product.image_url}`}
+                          src={`${API_URL}${product.image_url}`}
                           alt={product.title}
                           className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 opacity-80 ${product.status === 'sold' ? 'grayscale-[0.5]' : ''}`}
                           onError={(e) => {

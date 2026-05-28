@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 export default function AddProductPage() {
   const router = useRouter();
   const { user, token, loading: authLoading } = useAuth();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -54,7 +55,7 @@ export default function AddProductPage() {
       const uploadFormData = new FormData();
       uploadFormData.append('file', imageFile);
       
-      const uploadRes = await fetch('http://localhost:8000/upload', {
+      const uploadRes = await fetch(`${API_URL}/upload`, {
         method: 'POST',
         body: uploadFormData,
       });
@@ -67,7 +68,7 @@ export default function AddProductPage() {
       image_url = uploadData.image_url;
 
       // Ürün oluşturma adımı
-      const response = await fetch('http://localhost:8000/products', {
+      const response = await fetch(`${API_URL}/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

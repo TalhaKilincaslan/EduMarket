@@ -37,6 +37,7 @@ export default function ProductDetail() {
   const { id } = useParams();
   const router = useRouter();
   const { user, token } = useAuth();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const [product, setProduct] = useState<Product | null>(null);
   const [ownerName, setOwnerName] = useState<string>("Satıcı");
   const [loading, setLoading] = useState(true);
@@ -73,7 +74,7 @@ export default function ProductDetail() {
     const headers: any = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
     
-    fetch(`http://localhost:8000/products/${id}`, { headers })
+    fetch(`${API_URL}/products/${id}`, { headers })
       .then(res => {
         if (!res.ok) throw new Error("Product not found");
         return res.json();
@@ -107,7 +108,7 @@ export default function ProductDetail() {
     }
     if (window.confirm("Bu ilanı silmek istediğinize emin misiniz?")) {
       try {
-        const res = await fetch(`http://localhost:8000/products/${id}`, {
+        const res = await fetch(`${API_URL}/products/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`
@@ -130,7 +131,7 @@ export default function ProductDetail() {
     setLoadingBuyers(true);
     setIsSellModalOpen(true);
     try {
-      const res = await fetch(`http://localhost:8000/products/${id}/potential-buyers`, {
+      const res = await fetch(`${API_URL}/products/${id}/potential-buyers`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -146,7 +147,7 @@ export default function ProductDetail() {
   const handleConfirmSell = async (buyerId: number) => {
     setSellingLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/products/${id}/sell`, {
+      const res = await fetch(`${API_URL}/products/${id}/sell`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -180,7 +181,7 @@ export default function ProductDetail() {
 
   useEffect(() => {
     if (user && product && user.id === product.owner_id && token) {
-      fetch(`http://localhost:8000/products/${id}/offers`, {
+      fetch(`${API_URL}/products/${id}/offers`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
       .then(res => res.ok ? res.json() : [])
@@ -194,7 +195,7 @@ export default function ProductDetail() {
     if (!token) return;
     setSubmittingOffer(true);
     try {
-      const res = await fetch(`http://localhost:8000/products/${id}/offers`, {
+      const res = await fetch(`${API_URL}/products/${id}/offers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ offer_price: parseFloat(offerPrice) })
@@ -216,7 +217,7 @@ export default function ProductDetail() {
   const handleAcceptOffer = async (offerId: number) => {
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:8000/offers/${offerId}/accept`, {
+      const res = await fetch(`${API_URL}/offers/${offerId}/accept`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -235,7 +236,7 @@ export default function ProductDetail() {
   const handleRejectOffer = async (offerId: number) => {
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:8000/offers/${offerId}/reject`, {
+      const res = await fetch(`${API_URL}/offers/${offerId}/reject`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -252,7 +253,7 @@ export default function ProductDetail() {
     if (!token || !product) return;
     setSubmittingReport(true);
     try {
-      const res = await fetch(`http://localhost:8000/reports`, {
+      const res = await fetch(`${API_URL}/reports`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({
@@ -286,7 +287,7 @@ export default function ProductDetail() {
     if (!token || !product) return;
     setSubmittingReview(true);
     try {
-      const res = await fetch(`http://localhost:8000/users/${product.owner_id}/reviews`, {
+      const res = await fetch(`${API_URL}/users/${product.owner_id}/reviews`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -299,7 +300,7 @@ export default function ProductDetail() {
         setRating(0);
         setComment("");
         // Refresh product data
-        const updatedRes = await fetch(`http://localhost:8000/products/${id}`, {
+        const updatedRes = await fetch(`${API_URL}/products/${id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const updatedData = await updatedRes.json();
@@ -362,7 +363,7 @@ export default function ProductDetail() {
             {product.image_url ? (
               <>
                 <img 
-                  src={`http://localhost:8000${product.image_url}`} 
+                  src={`${API_URL}${product.image_url}`} 
                   alt={product.title}
                   className="w-full h-full object-cover absolute inset-0 opacity-80 group-hover:scale-105 transition-transform duration-700 ease-out"
                   onError={(e) => {
@@ -459,7 +460,7 @@ export default function ProductDetail() {
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-white/10 border-2 border-primary/30 group-hover:border-primary transition-colors">
                   {product.owner_image ? (
-                    <img src={`http://localhost:8000${product.owner_image}`} alt={product.owner_name} className="w-full h-full object-cover" />
+                    <img src={`${API_URL}${product.owner_image}`} alt={product.owner_name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-white/30">
                       <UserIcon className="w-8 h-8" />
@@ -597,7 +598,7 @@ export default function ProductDetail() {
                   <div key={offer.id} className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/10">
                      <div className="flex items-center gap-4 mb-4 sm:mb-0">
                         <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden">
-                           {offer.buyer_image ? <img src={`http://localhost:8000${offer.buyer_image}`} className="w-full h-full object-cover" /> : <UserIcon className="w-5 h-5 m-auto mt-2.5 text-white/50" />}
+                           {offer.buyer_image ? <img src={`${API_URL}${offer.buyer_image}`} className="w-full h-full object-cover" /> : <UserIcon className="w-5 h-5 m-auto mt-2.5 text-white/50" />}
                         </div>
                         <div>
                            <div className="font-bold text-white">{offer.buyer_name}</div>
@@ -657,7 +658,7 @@ export default function ProductDetail() {
                   >
                     <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/20 border border-white/10">
                       {buyer.profile_image_url ? (
-                        <img src={`http://localhost:8000${buyer.profile_image_url}`} alt={buyer.full_name} className="w-full h-full object-cover" />
+                        <img src={`${API_URL}${buyer.profile_image_url}`} alt={buyer.full_name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <UserIcon className="w-5 h-5 text-primary" />

@@ -36,6 +36,7 @@ interface ProductData {
 export default function AdminDashboard() {
   const { user, token, loading: authLoading } = useAuth();
   const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
   const [activeTab, setActiveTab] = useState<'users' | 'products' | 'chats' | 'reports'>('users');
   const [users, setUsers] = useState<UserData[]>([]);
@@ -63,7 +64,7 @@ export default function AdminDashboard() {
     setActionLoading(true);
     try {
       const targetUserId = selectedReport.target_user_id;
-      const res = await fetch(`http://localhost:8000/admin/users/${targetUserId}/action`, {
+      const res = await fetch(`${API_URL}/admin/users/${targetUserId}/action`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -109,14 +110,14 @@ export default function AdminDashboard() {
     setDataLoading(true);
     try {
       const [usersRes, productsRes, chatsRes, reportsRes] = await Promise.all([
-        fetch('http://localhost:8000/admin/users', {
+        fetch(`${API_URL}/admin/users`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch('http://localhost:8000/products'),
-        fetch('http://localhost:8000/admin/chats', {
+        fetch(`${API_URL}/products`),
+        fetch(`${API_URL}/admin/chats`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }),
-        fetch('http://localhost:8000/admin/reports', {
+        fetch(`${API_URL}/admin/reports`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
       ]);
@@ -135,7 +136,7 @@ export default function AdminDashboard() {
     setSelectedChat(chat);
     setHistoryLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/admin/chats/${chat.product_id}/${chat.user1_id}/${chat.user2_id}`, {
+      const res = await fetch(`${API_URL}/admin/chats/${chat.product_id}/${chat.user1_id}/${chat.user2_id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -150,7 +151,7 @@ export default function AdminDashboard() {
   const handleDeleteMessage = async (messageId: number) => {
     if (!window.confirm('Bu mesajı kalıcı olarak silmek istediğinize emin misiniz?')) return;
     try {
-      const res = await fetch(`http://localhost:8000/admin/messages/${messageId}`, {
+      const res = await fetch(`${API_URL}/admin/messages/${messageId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -173,7 +174,7 @@ export default function AdminDashboard() {
     if (!window.confirm('Bu kullanıcıyı ve tüm ilanlarını silmek istediğinize emin misiniz?')) return;
     
     try {
-      const res = await fetch(`http://localhost:8000/admin/users/${userId}`, {
+      const res = await fetch(`${API_URL}/admin/users/${userId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -194,7 +195,7 @@ export default function AdminDashboard() {
     if (!window.confirm('Bu ilanı silmek istediğinize emin misiniz?')) return;
     
     try {
-      const res = await fetch(`http://localhost:8000/admin/products/${productId}`, {
+      const res = await fetch(`${API_URL}/admin/products/${productId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -211,7 +212,7 @@ export default function AdminDashboard() {
 
   const handleResolveReport = async (reportId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/admin/reports/${reportId}/resolve`, {
+      const res = await fetch(`${API_URL}/admin/reports/${reportId}/resolve`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -233,7 +234,7 @@ export default function AdminDashboard() {
 
   const handleToggleFeature = async (productId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/admin/products/${productId}/feature`, {
+      const res = await fetch(`${API_URL}/admin/products/${productId}/feature`, {
         method: 'PATCH',
         headers: { 'Authorization': `Bearer ${token}` }
       });

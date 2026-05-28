@@ -43,6 +43,7 @@ export default function PublicProfilePage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, token, loading: authLoading } = useAuth();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,7 +70,7 @@ export default function PublicProfilePage() {
   const fetchProfile = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/users/${id}`);
+      const res = await fetch(`${API_URL}/users/${id}`);
       if (res.ok) {
         setProfile(await res.json());
       } else {
@@ -91,7 +92,7 @@ export default function PublicProfilePage() {
     }
     setReviewLoading(true);
     try {
-      const res = await fetch(`http://localhost:8000/users/${id}/reviews`, {
+      const res = await fetch(`${API_URL}/users/${id}/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -148,7 +149,7 @@ export default function PublicProfilePage() {
       )}
       <div className="h-44 overflow-hidden relative bg-[#1e293b]">
         {product.image_url ? (
-          <img src={`http://localhost:8000${product.image_url}`} alt={product.title} className={`w-full h-full object-cover opacity-80 ${product.status === 'sold' ? 'grayscale-[0.5]' : ''}`} />
+          <img src={`${API_URL}${product.image_url}`} alt={product.title} className={`w-full h-full object-cover opacity-80 ${product.status === 'sold' ? 'grayscale-[0.5]' : ''}`} />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/40">Görsel Yok</div>
         )}
@@ -172,7 +173,7 @@ export default function PublicProfilePage() {
         <div className="flex flex-col md:flex-row items-center md:items-start gap-8 z-10 relative">
           <div className="w-32 h-32 rounded-full bg-primary/20 border-4 border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0">
             {profile.user.profile_image_url ? (
-              <img src={`http://localhost:8000${profile.user.profile_image_url}`} alt={profile.user.full_name} className="w-full h-full object-cover" />
+              <img src={`${API_URL}${profile.user.profile_image_url}`} alt={profile.user.full_name} className="w-full h-full object-cover" />
             ) : (
               <User className="w-16 h-16 text-primary" />
             )}
@@ -249,7 +250,7 @@ export default function PublicProfilePage() {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary/20 overflow-hidden flex items-center justify-center">
                         {review.reviewer_image ? (
-                          <img src={`http://localhost:8000${review.reviewer_image}`} alt={review.reviewer_name} className="w-full h-full object-cover" />
+                          <img src={`${API_URL}${review.reviewer_image}`} alt={review.reviewer_name} className="w-full h-full object-cover" />
                         ) : (
                           <User className="w-5 h-5 text-primary" />
                         )}

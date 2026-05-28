@@ -49,7 +49,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (token && user) {
       // Connect to WebSocket
-      ws.current = new WebSocket(`ws://localhost:8000/ws/chat/${token}`);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const WS_URL = API_URL.replace(/^http/, "ws");
+      ws.current = new WebSocket(`${WS_URL}/ws/chat/${token}`);
       
       ws.current.onopen = () => {
         if (activeChat) {
@@ -145,7 +147,8 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
   const fetchHistory = async (productId: number, otherUserId: number) => {
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:8000/chat/history/${productId}/${otherUserId}`, {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API_URL}/chat/history/${productId}/${otherUserId}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {

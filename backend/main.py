@@ -11,6 +11,9 @@ from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 import uuid
 import shutil
 import time
@@ -240,16 +243,19 @@ app = FastAPI(title="EduMarket API")
 # Statik dosyaları dışarı aç (Resimlerin görünmesi için EN kritik satır)
 app.mount('/static', StaticFiles(directory=STATIC_DIR), name='static')
 
+cors_origins_str = os.getenv("CORS_ORIGINS", "*")
+allow_origins = ["*"] if cors_origins_str == "*" else [o.strip() for o in cors_origins_str.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # 6. Auth Ayarları
-SECRET_KEY = "super_secret_edumarket_key"
+SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_edumarket_key")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 

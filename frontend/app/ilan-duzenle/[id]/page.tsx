@@ -12,6 +12,7 @@ export default function EditProductPage() {
   const { id } = useParams();
   const router = useRouter();
   const { user, token, loading: authLoading } = useAuth();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,7 +42,7 @@ export default function EditProductPage() {
 
   const fetchProduct = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/products/${id}`);
+      const res = await fetch(`${API_URL}/products/${id}`);
       if (res.ok) {
         const product = await res.json();
         if (product.owner_id !== user?.id && !user?.is_admin) {
@@ -59,7 +60,7 @@ export default function EditProductPage() {
         setIsBundle(product.is_bundle || false);
 
         if (product.image_url) {
-          setImagePreview(`http://localhost:8000${product.image_url}`);
+          setImagePreview(`${API_URL}${product.image_url}`);
         }
       } else {
         router.push('/profil');
@@ -91,7 +92,7 @@ export default function EditProductPage() {
       if (imageFile) {
         const formData = new FormData();
         formData.append('file', imageFile);
-        const uploadRes = await fetch('http://localhost:8000/upload', {
+        const uploadRes = await fetch(`${API_URL}/upload`, {
           method: 'POST',
           body: formData,
         });
@@ -117,7 +118,7 @@ export default function EditProductPage() {
         payload.image_url = image_url;
       }
       
-      const res = await fetch(`http://localhost:8000/products/${id}`, {
+      const res = await fetch(`${API_URL}/products/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

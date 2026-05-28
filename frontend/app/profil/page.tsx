@@ -42,6 +42,7 @@ interface ProfileData {
 export default function MyProfilePage() {
   const { user, token, loading: authLoading, updateUser } = useAuth();
   const router = useRouter();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [favorites, setFavorites] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,8 +73,8 @@ export default function MyProfilePage() {
     setLoading(true);
     try {
       const [profRes, favRes] = await Promise.all([
-        fetch('http://localhost:8000/users/me', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('http://localhost:8000/me/favorites', { headers: { 'Authorization': `Bearer ${token}` } })
+        fetch(`${API_URL}/users/me`, { headers: { 'Authorization': `Bearer ${token}` } }),
+        fetch(`${API_URL}/me/favorites`, { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
       if (profRes.ok) {
         const data = await profRes.json();
@@ -114,7 +115,7 @@ export default function MyProfilePage() {
     formData.append('file', file);
 
     try {
-      const res = await fetch('http://localhost:8000/users/upload-profile-picture', {
+      const res = await fetch(`${API_URL}/users/upload-profile-picture`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -149,7 +150,7 @@ export default function MyProfilePage() {
     e.preventDefault();
     setSaveLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/users/me', {
+      const res = await fetch(`${API_URL}/users/me`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -178,7 +179,7 @@ export default function MyProfilePage() {
     e.preventDefault();
     if (!confirm("İlanı silmek istediğinize emin misiniz?")) return;
     try {
-      const res = await fetch(`http://localhost:8000/products/${productId}`, {
+      const res = await fetch(`${API_URL}/products/${productId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -213,7 +214,7 @@ export default function MyProfilePage() {
       )}
       <div className="h-44 overflow-hidden relative bg-[#1e293b]">
         {product.image_url ? (
-          <img src={`http://localhost:8000${product.image_url}`} alt={product.title} className={`w-full h-full object-cover opacity-80 ${product.status === 'sold' ? 'grayscale-[0.5]' : ''}`} />
+          <img src={`${API_URL}${product.image_url}`} alt={product.title} className={`w-full h-full object-cover opacity-80 ${product.status === 'sold' ? 'grayscale-[0.5]' : ''}`} />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-primary/5 text-primary/40">Görsel Yok</div>
         )}
@@ -257,7 +258,7 @@ export default function MyProfilePage() {
             <div className="w-32 h-32 rounded-full bg-primary/20 border-4 border-white/10 flex items-center justify-center overflow-hidden flex-shrink-0 relative shadow-2xl shadow-primary/20">
               {imagePreview || profile.user.profile_image_url ? (
                 <img 
-                  src={imagePreview || `http://localhost:8000${profile.user.profile_image_url}`} 
+                  src={imagePreview || `${API_URL}${profile.user.profile_image_url}`} 
                   alt={profile.user.full_name} 
                   className={`w-full h-full object-cover transition-opacity duration-300 ${uploadLoading ? 'opacity-50' : 'opacity-100'}`} 
                 />
@@ -382,7 +383,7 @@ export default function MyProfilePage() {
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-primary/20 overflow-hidden flex items-center justify-center">
                         {review.reviewer_image ? (
-                          <img src={`http://localhost:8000${review.reviewer_image}`} alt={review.reviewer_name} className="w-full h-full object-cover" />
+                          <img src={`${API_URL}${review.reviewer_image}`} alt={review.reviewer_name} className="w-full h-full object-cover" />
                         ) : (
                           <User className="w-5 h-5 text-primary" />
                         )}

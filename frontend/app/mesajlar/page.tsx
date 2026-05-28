@@ -22,6 +22,7 @@ function MessagesContent() {
   const { messages, fetchHistory, sendMessage, markAsRead, setActiveChat, activeChat } = useChat();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
   
   const [chats, setChats] = useState<ChatData[]>([]);
   const [loadingChats, setLoadingChats] = useState(true);
@@ -43,7 +44,7 @@ function MessagesContent() {
   const loadChats = async () => {
     if (!token) return;
     try {
-      const res = await fetch('http://localhost:8000/chats', {
+      const res = await fetch(`${API_URL}/chats`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -143,7 +144,7 @@ function MessagesContent() {
                 >
                   <div className="w-10 h-10 rounded-full bg-blue-500/20 flex-shrink-0 flex items-center justify-center overflow-hidden">
                     {chat.other_user_image ? (
-                      <img src={`http://localhost:8000${chat.other_user_image}`} alt={chat.other_user_name} className="w-full h-full object-cover" />
+                      <img src={`${API_URL}${chat.other_user_image}`} alt={chat.other_user_name} className="w-full h-full object-cover" />
                     ) : (
                       <User className="w-5 h-5 text-blue-300" />
                     )}
@@ -167,7 +168,7 @@ function MessagesContent() {
               <div className="p-4 bg-white/5 border-b border-white/10 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden">
                   {activeChat.otherUserImage ? (
-                    <img src={`http://localhost:8000${activeChat.otherUserImage}`} alt={activeChat.otherUserName} className="w-full h-full object-cover" />
+                    <img src={`${API_URL}${activeChat.otherUserImage}`} alt={activeChat.otherUserName} className="w-full h-full object-cover" />
                   ) : (
                     <User className="w-5 h-5 text-primary" />
                   )}
@@ -197,7 +198,7 @@ function MessagesContent() {
                         {!isMe && (
                           <Link href={`/profil/${msg.sender_id}`} className="w-8 h-8 rounded-full bg-white/10 flex-shrink-0 flex items-center justify-center mr-2 self-end hover:bg-white/20 transition-colors overflow-hidden">
                             {msg.sender_image ? (
-                              <img src={`http://localhost:8000${msg.sender_image}`} alt={msg.sender_name} className="w-full h-full object-cover" />
+                              <img src={`${API_URL}${msg.sender_image}`} alt={msg.sender_name} className="w-full h-full object-cover" />
                             ) : (
                               <User className="w-4 h-4 text-white/40" />
                             )}

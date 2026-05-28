@@ -42,7 +42,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const fetchNotifications = async () => {
     if (!token) return;
     try {
-      const res = await fetch("http://localhost:8000/notifications", {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API_URL}/notifications`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -60,7 +61,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const markAsRead = async (id: number) => {
     if (!token) return;
     try {
-      const res = await fetch(`http://localhost:8000/notifications/${id}/read`, {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API_URL}/notifications/${id}/read`, {
         method: "PATCH",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -80,7 +82,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const markAllAsRead = async () => {
     if (!token) return;
     try {
-      const res = await fetch("http://localhost:8000/notifications/read-all", {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${API_URL}/notifications/read-all`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
