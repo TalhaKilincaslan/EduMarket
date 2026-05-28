@@ -706,10 +706,17 @@ def verify_email(token: str = Query(...), db: Session = Depends(get_db)):
 @app.post("/auth/resend-verification")
 def resend_verification(req: ResendVerificationRequest, background_tasks: BackgroundTasks, db: Session = Depends(get_db)):
     email_lower = req.email.lower().strip()
-    user = db.query(UserModel).filter(UserModel.email == email_lower).first()
+    # Case-insensitive query to find the user
+    user = db.query(UserModel).filter(UserModel.email.ilike(email_lower)).first()
+    
+    # Debug log to help developers track matching issues
+    print(f"[DEBUG] Resend verification request for email: {email_lower}. Found user: {user.email if user else 'None'}, is_verified: {user.is_verified if user else 'None'}")
+    
     if not user:
         raise HTTPException(status_code=404, detail="Kullanıcı bulunamadı")
-    if user.is_verified:
+        
+    # Check if the user is already verified (is_verified is True)
+    if getattr(user, "is_verified", False) is True:
         raise HTTPException(status_code=400, detail="Bu hesap zaten onaylanmış")
         
     token = str(uuid.uuid4())
