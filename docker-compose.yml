@@ -1,5 +1,5 @@
 services:
-db:
+  db:
     image: postgres:15-alpine
     container_name: edumarket-db-1
     environment:
@@ -9,13 +9,14 @@ db:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - edumarket_pgdata:/var/lib/postgresql/data
     restart: always
 
   backend:
     build: ./backend
+    container_name: edumarket-backend-1
     environment:
-      - DATABASE_URL=postgresql://edumarket_user:edumarket_password@db:5432/edumarket_db
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@edumarket-db-1:5432/${DB_NAME}
     ports:
       - "8000:8000"
     volumes:
@@ -25,10 +26,11 @@ db:
 
   frontend:
     build: ./frontend
+    container_name: edumarket-frontend-1
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_API_URL=http://87.232.127.125
     depends_on:
       - backend
 
