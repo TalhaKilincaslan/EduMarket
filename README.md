@@ -1,5 +1,7 @@
 # 🎓 EduMarket
 
+![Vibe Coding](https://img.shields.io/badge/Vibe%20Coding-AI%20Assisted-blueviolet?style=for-the-badge&logo=openai&logoColor=white)
+
 EduMarket, üniversite öğrencilerinin kendi aralarında güvenli, hızlı ve kampüs odaklı bir şekilde ürün/ilan alışverişi yapabilmelerini, canlı olarak mesajlaşabilmelerini sağlayan **Full-Stack ve Production-Ready (Canlı Ortama Hazır)** bir web platformudur.
 
 Proje, kurumsal standartlarda mikroservis mimarisine, konteynerizasyon altyapısına ve yüksek performanslı sunucu optimizasyonlarına sahiptir.
